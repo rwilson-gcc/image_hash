@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DOCX Image Extract & Hash Compare</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+    body { font-family: Arial, sans-serif; margin: 30px; }
+    h2 { margin-top: 40px; }
+    .file-box { margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; }
+    .image-box { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+    img { max-width: 200px; display: block; margin-bottom: 5px; }
+    code { background: #f5f5f5; padding: 3px 5px; display: inline-block; }
+    hr { margin: 25px 0; }
+</style>
+</head>
+<body>
+
+<h1>DOCX Image Extractor & Hash Comparator</h1>
+
+<div class="file-box">
+    <strong>Document 1:</strong>
+    <input type="file" id="doc1" accept=".docx">
+</div>
+
+<div class="file-box">
+    <strong>Document 2:</strong>
+    <input type="file" id="doc2" accept=".docx">
+</div>
+
+<button onclick="processDocs()">Compare Images</button>
+
+<h2>Results</h2>
+<div id="results"></div>
+
+<script>
+async function extractImagesFromDocx(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(arrayBuffer);
+
+    const images = [];
+    const mediaFiles = Object.keys(zip.files).filter(p => p.startsWith("word/media/"));
+
+    for (const path of mediaFiles) {
+        const data = await zip.files[path].async("uint8array");
+        images.push({ name: path, data });
+    }
+
+    return images;
+}
+
+async function computeHash(uint8) {
+    const hashBuffer = await crypto.subtle.digest("SHA-256", uint8);
+    return Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+}
+
+async function processDocs() {
+    const file1 = document.getElementById("doc1").files[0];
+    const file2 = document.getElementById("doc2").files[0];
+
+    if (!file1 || !file2) {
+        alert("Please select both documents.");
+        return;
+    }
+
+    const resultsDiv = document.getElementById("results");
+    resultsDiv.innerHTML = "<p>Processing… please wait.</p>";
+
+    const imgs1 = await extractImagesFromDocx(file1);
+    const imgs2 = await extractImagesFromDocx(file2);
+
+    const hashed1 = await Promise.all(
+        imgs1.map(async img => ({
+            name: img.name,
+            hash: await computeHash(img.data),
+            data: img.data
+        }))
+    );
+
+    const hashed2 = await Promise.all(
+        imgs2.map(async img => ({
+            name: img.name,
+            hash: await computeHash(img.data),
+            data: img.data
+        }))
+    );
+
+    // Compare hash sets
+    const matches = [];
+    const unique1 = [];
+    const unique2 = [];
+
+    hashed1.forEach(img1 => {
+        const match = hashed2.find(img2 => img2.hash === img1.hash);
+        if (match) {
+            matches.push([img1, match]);
+        } else {
+            unique1.push(img1);
+        }
+    });
+
+    hashed2.forEach(img2 => {
+        if (!hashed1.find(img1 => img1.hash === img2.hash)) {
+            unique2.push(img2);
+        }
+    });
+
+    // Render results
+    const renderImage = (imgObj) => {
+        const blob = new Blob([imgObj.data]);
+        const url = URL.createObjectURL(blob);
+        return `
+        <div class="image-box">
+            <img src="${url}">
+            <div><strong>${imgObj.name}</strong></div>
+            <div>Hash: <code>${imgObj.hash}</code></div>
+        </div>
+        `;
+    };
+
+    const renderMatches = () => {
+        if (matches.length === 0) return "<p>No matching images.</p>";
+        return matches.map(pair => `
+            <div>
+                <h4>Match</h4>
+                <div style="display:flex; gap:40px;">
+                    <div>
+                        <h5>Document 1</h5>
+                        ${renderImage(pair[0])}
+                    </div>
+                    <div>
+                        <h5>Document 2</h5>
+                        ${renderImage(pair[1])}
+                    </div>
+                </div>
+                <hr>
+            </div>
+        `).join("");
+    };
+
+    resultsDiv.innerHTML = `
+        <h3>Matching Images</h3>
+        ${renderMatches()}
+        <h3>Unique to Document 1</h3>
+        ${unique1.map(renderImage).join("") || "<p>None</p>"}
+        <h3>Unique to Document 2</h3>
+        ${unique2.map(renderImage).join("") || "<p>None</p>"}
+    `;
+}
+</script>
+
+</body>
+</html>
