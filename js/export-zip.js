@@ -1,0 +1,1 @@
+async function exportZIP(){const zip=new JSZip();window._allImages.forEach(img=>{zip.file(img.fileName+"_"+img.internalName.replace("word/media/",""),img.data);});const blob=await zip.generateAsync({type:"blob"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="extracted_images.zip";a.click();} window.exportZIP=exportZIP;

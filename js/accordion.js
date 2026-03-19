@@ -1,0 +1,1 @@
+function makeAccordion(){document.querySelectorAll(".accordion").forEach(acc=>{acc.onclick=function(){this.classList.toggle("active");let panel=this.nextElementSibling;panel.style.display=panel.style.display==="block"?"none":"block";};});} window.makeAccordion=makeAccordion;

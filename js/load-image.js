@@ -1,0 +1,1 @@
+function loadImage(url){return new Promise(res=>{let img=new Image();img.onload=()=>res(img);img.src=url;});} window.loadImage=loadImage;

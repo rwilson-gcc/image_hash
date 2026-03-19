@@ -1,0 +1,1 @@
+function renderCard(img){let url=URL.createObjectURL(new Blob([img.data]));return `<div class="image-card"><img src="${url}"><strong>File:</strong> ${img.fileName}<br><strong>Internal:</strong> ${img.internalName}<code>SHA256: ${img.sha}</code></div>`;} window.renderCard=renderCard;

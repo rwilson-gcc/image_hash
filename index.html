@@ -1,0 +1,26 @@
+
+<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'>
+<title>Image Analysis Tool</title>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'></script>
+<link rel='stylesheet' href='styles/styles.css'>
+</head><body>
+<header>Image Analysis Tool <div class='dark-toggle' onclick='toggleDarkMode()'>🌓 Toggle Dark Mode</div></header>
+<div class='container'>
+ <div class='upload-box'><h3>Select multiple DOCX files:</h3><input type='file' id='files' accept='.docx' multiple></div>
+ <button onclick='processAll()'>Process Documents</button>
+ <button onclick='exportZIP()'>Download Extracted Images (ZIP)</button>
+ <h2>Results</h2><div id='results'></div>
+ <h2>Export Data</h2><button onclick='downloadCSV_SHA()'>Download SHA‑256 CSV</button>
+</div>
+<script src='js/dark-mode.js'></script>
+<script src='js/sha256.js'></script>
+<script src='js/extract-images.js'></script>
+<script src='js/load-image.js'></script>
+<script src='js/render-card.js'></script>
+<script src='js/render-output.js'></script>
+<script src='js/accordion.js'></script>
+<script src='js/export-zip.js'></script>
+<script src='js/export-csv.js'></script>
+<script src='js/process-all.js'></script>
+<script src='js/main.js'></script>
+</body></html>
